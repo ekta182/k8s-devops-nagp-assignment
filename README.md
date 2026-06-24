@@ -4,7 +4,7 @@ A two-tier application deployed on **Azure Kubernetes Service (AKS)**: a Spring 
 **Service/API tier** that reads records from a **MySQL database tier** over an internal
 Service, exposed externally through an NGINX **Ingress**.
 
-## Links (fill these in before submitting)
+## Links
 
 | What | URL |
 |------|-----|
