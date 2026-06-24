@@ -1,0 +1,81 @@
+# StatefulSet for the database tier:
+#  - 1 replica (per the requirements table)
+#  - PersistentVolumeClaim via volumeClaimTemplates so data survives pod deletion
+#  - Reads passwords from the Secret, DB name from a literal, seed SQL from a ConfigMap
+#  - Recovers automatically after pod deletion (controller recreates mysql-0 and
+#    re-attaches the SAME PersistentVolume, so existing rows remain)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: finops
+spec:
+  serviceName: mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              value: "appdb"
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "768Mi"
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$(MYSQL_ROOT_PASSWORD)"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$(MYSQL_ROOT_PASSWORD)"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: initdb
+          configMap:
+            name: mysql-initdb
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: managed-csi   # AKS Standard SSD (FinOps-friendly vs premium)
+        resources:
+          requests:
+            storage: 1Gi

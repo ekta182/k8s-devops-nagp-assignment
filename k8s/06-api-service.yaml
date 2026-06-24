@@ -1,0 +1,17 @@
+# ClusterIP service for the API. External traffic reaches it through the Ingress,
+# not directly — so this stays ClusterIP rather than LoadBalancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: finops
+  labels:
+    app: api
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP

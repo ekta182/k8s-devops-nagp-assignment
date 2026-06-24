@@ -1,0 +1,28 @@
+# Horizontal Pod Autoscaler for the Service/API tier.
+#  - minReplicas 4 keeps the required baseline of 4 pods
+#  - scales up to 10 under CPU pressure, scales back down when idle (FinOps)
+#  - relies on metrics-server, which is pre-installed on AKS
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+  namespace: finops
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 4
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120
+    scaleUp:
+      stabilizationWindowSeconds: 0

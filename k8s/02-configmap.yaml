@@ -1,0 +1,40 @@
+# Two ConfigMaps:
+#  1. app-config  -> non-secret DB connection settings injected into the API pods.
+#     This satisfies "DB configuration must be configurable from outside the pod
+#     definition and application code".
+#  2. mysql-initdb -> the seed SQL, mounted into the MySQL container so it runs
+#     on first initialisation.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: finops
+data:
+  DB_HOST: "mysql"          # Kubernetes Service DNS name — never a pod IP
+  DB_PORT: "3306"
+  DB_NAME: "appdb"
+  DB_USER: "appuser"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb
+  namespace: finops
+data:
+  seed.sql: |
+    CREATE TABLE IF NOT EXISTS employees (
+        id          BIGINT PRIMARY KEY,
+        name        VARCHAR(100) NOT NULL,
+        department  VARCHAR(100) NOT NULL,
+        role        VARCHAR(100) NOT NULL
+    );
+
+    INSERT INTO employees (id, name, department, role) VALUES
+        (1, 'Aarav Sharma',    'Engineering', 'Backend Developer'),
+        (2, 'Priya Nair',      'Engineering', 'DevOps Engineer'),
+        (3, 'Rohan Mehta',     'Platform',    'SRE'),
+        (4, 'Isha Verma',      'Product',     'Product Manager'),
+        (5, 'Karan Singh',     'Cloud',       'FinOps Analyst'),
+        (6, 'Neha Kapoor',     'Engineering', 'Frontend Developer'),
+        (7, 'Vikram Iyer',     'Platform',    'Kubernetes Admin'),
+        (8, 'Ananya Reddy',    'QA',          'Automation Engineer');

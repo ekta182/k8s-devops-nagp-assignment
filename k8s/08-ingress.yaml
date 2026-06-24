@@ -1,0 +1,28 @@
+# Exposes the Service/API tier externally via the NGINX ingress controller.
+#
+# Install the controller once per cluster (creates an Azure public LoadBalancer):
+#   helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+#   helm install ingress-nginx ingress-nginx/ingress-nginx \
+#     --namespace ingress-nginx --create-namespace
+#
+# Then:  kubectl get svc -n ingress-nginx   -> note the EXTERNAL-IP.
+# Access the app at  http://<EXTERNAL-IP>/  and  http://<EXTERNAL-IP>/api/employees
+#
+# If you have a hostname, set it under rules[].host; otherwise the IP works as-is.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: finops
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 80
