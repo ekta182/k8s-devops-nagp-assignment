@@ -23,7 +23,7 @@ Service, exposed externally through an NGINX **Ingress**.
         ┌──────▼───────┐   Service (ClusterIP :80 -> 8080)
         │   api svc    │
         └──────┬───────┘
-   ┌────┬──────┼──────┬────┐   Deployment: 4 replicas + HPA (4..10)
+   ┌────┬──────┼──────┬────┐   Deployment: 4 replicas + HPA
    ▼    ▼      ▼      ▼    ▼   Spring Boot, HikariCP pool, Actuator probes
   api  api    api    api ...
         │  DB_HOST=mysql (Service DNS, never a pod IP)
@@ -40,6 +40,6 @@ Service, exposed externally through an NGINX **Ingress**.
 
 app/           Spring Boot source + multi-stage Dockerfile
 db/init/        seed.sql (schema + 8 records)  [same SQL lives in the ConfigMap]
-k8s/           all Kubernetes manifests (00..08)
+k8s/           all Kubernetes manifests 
 docs/          comprehensive documentation (.docx)
 
